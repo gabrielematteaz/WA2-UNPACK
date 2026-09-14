@@ -2,14 +2,15 @@
 
 #include <Windows.h>
 
-#include <algorithm>
+#include <algorithm> // std::ranges::fill_n
 #include <fstream>
 #include <iterator>
 #include <memory>
 #include <stdexcept>
+#include <iostream>
 
 namespace mttPAK {
-  static std::int64_t leaf_WA2_lzss(char * out, char const* in, std::uint32_t size, std::uint32_t final_size) {
+  static std::int64_t leaf_WA2_LZSS(char * out, char const* in, std::uint32_t size, std::uint32_t final_size) {
     int N = 4096;
     int F = 18;
     std::vector < char > window(N);
@@ -28,6 +29,7 @@ namespace mttPAK {
 
       if ((flags & 0x100) == 0) {
         if (size <= source) {
+          std::cout << ">: exceeded source buffer during decompression\n";
           break;
         }
 
@@ -37,6 +39,7 @@ namespace mttPAK {
 
       if (flags & 1) {
         if (size <= source) {
+          std::cout << ">: exceeded source buffer during decompression\n";
           break;
         }
 
@@ -50,6 +53,7 @@ namespace mttPAK {
       }
       else {
         if (size <= source + 1) {
+          std::cout << ">: exceeded source buffer during decompression\n";
           break;
         }
 
@@ -82,15 +86,13 @@ namespace mttPAK {
   }
 
   KCAP_entry::KCAP_entry(KCAP_raw_entry raw_entry) :
-    m_flag(raw_entry.flag),
+    m_flags(raw_entry.flags),
     m_unknown_1(raw_entry.unknown_1),
     m_unknown_2(raw_entry.unknown_2),
     m_offset(raw_entry.offset),
     m_size(raw_entry.size) {
     auto first = std::begin(raw_entry.name);
     auto current = first;
-
-    constexpr std::uint8_t k = 0x30 ^ 0x19;
 
     for (auto last = std::end(raw_entry.name); current != last; ++current) {
       if (*current == '\0') {
@@ -118,8 +120,8 @@ namespace mttPAK {
     return m_name_2;
   }
 
-  std::uint32_t KCAP_entry::flag() const noexcept {
-    return m_flag;
+  std::uint32_t KCAP_entry::flags() const noexcept {
+    return m_flags;
   }
 
   std::uint32_t KCAP_entry::unknown_1() const noexcept {
@@ -139,7 +141,8 @@ namespace mttPAK {
   }
 
   void KCAP_entry::extract(std::istream & stream, std::filesystem::path directory) const {
-    if (m_flag > 1) {
+    if (m_flags > 1) {
+      std::cout << ">: ignoring entry as flags suggest this is a directory (garbage data)\n";
       return;
     }
 
@@ -154,7 +157,8 @@ namespace mttPAK {
 
     directory.append(m_name_2);
 
-    if (m_flag == 0) {
+    if (m_flags == 0) {
+      std::cout << ">: uncompressed entry\n";
       std::ofstream file(directory, std::ios::binary);
 
       file.write(in.get(), m_size);
@@ -169,7 +173,7 @@ namespace mttPAK {
       }
 
       auto out = std::make_unique < char[] > (info.final_size);
-      std::int64_t real_size = leaf_WA2_lzss(out.get(), in.get() + sizeof(info), info.size - sizeof(info),
+      std::int64_t real_size = leaf_WA2_LZSS(out.get(), in.get() + sizeof(info), info.size - sizeof(info),
           info.final_size);
 
       std::ofstream file(directory, std::ios::binary);
@@ -179,6 +183,7 @@ namespace mttPAK {
   }
 
   KCAP_header::KCAP_header(std::istream & stream) {
+    stream.seekg(0);
     stream.read((char *)this, sizeof(*this));
 
     if (stream.gcount() != sizeof(*this)) {

@@ -1,17 +1,16 @@
-#ifndef MTTPAK_INCLUDE_LAC_H_
-#define MTTPAK_INCLUDE_LAC_H_
+#ifndef MTTPAK_INCLUDE_KCAP_H_
+#define MTTPAK_INCLUDE_KCAP_H_
 
 #include <cstdint>
 #include <filesystem>
 #include <istream>
+#include <ostream>
 #include <vector>
-
-// https://github.com/vn-tools/arc_unpacker/blob/master/src/dec/leaf/common/custom_lzss.cc
 
 namespace mttPAK {
 #pragma pack(push, 1)
   struct KCAP_raw_entry {
-    std::uint32_t flag;
+    std::uint32_t flags;
     char name[24];
     std::uint32_t unknown_1;
     std::uint32_t unknown_2;
@@ -24,10 +23,11 @@ namespace mttPAK {
     std::uint32_t final_size;
   };
 
+#pragma pack(pop)
   class KCAP_entry {
     std::string m_name;
     std::wstring m_name_2;
-    std::uint32_t m_flag;
+    std::uint32_t m_flags;
     std::uint32_t m_unknown_1;
     std::uint32_t m_unknown_2;
     std::int64_t m_offset;
@@ -37,7 +37,7 @@ namespace mttPAK {
     KCAP_entry(KCAP_raw_entry raw_entry);
     std::string const& name() const noexcept;
     std::wstring const& name_2() const noexcept;
-    std::uint32_t flag() const noexcept;
+    std::uint32_t flags() const noexcept;
     std::uint32_t unknown_1() const noexcept;
     std::uint32_t unknown_2() const noexcept;
     std::int64_t offset() const noexcept;
@@ -45,6 +45,7 @@ namespace mttPAK {
     void extract(std::istream & stream, std::filesystem::path directory) const;
   };
 
+#pragma pack(push, 1)
   class KCAP_header {
     char m_magic[4];
     std::uint32_t m_unknown_1;
