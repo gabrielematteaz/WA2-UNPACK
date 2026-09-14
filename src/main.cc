@@ -27,7 +27,7 @@ int main(int argc, char * argv[]) {
 
   for (auto const& entry : entries) {
     std::cout << "name(): " << entry.name() << " flag(): " << entry.flag() << " unknown_1(): " <<
-        entry.unknown_1() << " unknown_2(): " << entry.unknown_2() << " offset: " << entry.offset() <<
+        entry.unknown_1() << " unknown_2(): " << entry.unknown_2() << " offset(): " << entry.offset() <<
         " size(): " << entry.size() << '\n';
     entry.extract(file, argv[2]);
   }

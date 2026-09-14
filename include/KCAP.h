@@ -15,8 +15,13 @@ namespace mttPAK {
     char name[24];
     std::uint32_t unknown_1;
     std::uint32_t unknown_2;
-    std::uint32_t size;
     std::uint32_t offset;
+    std::uint32_t size;
+  };
+
+  struct KCAP_raw_entry_info {
+    std::uint32_t size;
+    std::uint32_t final_size;
   };
 
   class KCAP_entry {
